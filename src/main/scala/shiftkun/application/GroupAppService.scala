@@ -20,11 +20,8 @@ class GroupAppService(
   def registerGroup(userId: UserId)(implicit auth: AuthContext): ProcessResult[Group] = dbCtx.tx { implicit op =>
     for {
       user <- userRepository.get(userId)
-      lineUserId <- ProcessResult.wrapE(lineUserIdService.create)
-      user <- ProcessResult.wrapE(userService.create(lineUserId))
-      result <- userRepository.add(user)
     } yield {
-      result
+      Group(name = "tetete", status = GroupStatus.Active)
     }
   }
 }

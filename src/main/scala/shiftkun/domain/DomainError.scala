@@ -8,5 +8,6 @@ object DomainError {
   case object LineUserIdDuplicated extends ErrorType
   case object InvalidAuth extends ErrorType
   case object ClientNotFound extends ErrorType
+  case object UserNotFound extends ErrorType
 
 }

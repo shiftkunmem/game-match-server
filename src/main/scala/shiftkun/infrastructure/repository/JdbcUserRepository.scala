@@ -8,7 +8,7 @@ import shiftkun.lib.TypeConversions._
 
 import scala.concurrent.ExecutionContext
 import scalikejdbc.{DB, _}
-import shiftkun.domain.DomainError.ClientNotFound
+import shiftkun.domain.DomainError.{ClientNotFound, UserNotFound}
 import shiftkun.infrastructure.Codes
 import shiftkun.lib.auth.AuthContext
 import tables._
@@ -45,16 +45,26 @@ class JdbcUserRepository(
 
       val u = UserRecord.syntax("u")
 
-      withSQL {
+      val result = withSQL {
         select
           .from(UserRecord as u)
           .where
-          .eq(u.id, id.value)
+          .eq(u.user_id, id.value)
           .and.eq(u.status, Codes.UserStatusActive)
       }.map(UserRecord(u.resultName)).single.apply().map{u =>
-
+        User(
+          UserId(u.user_id),
+          LineUserId("1"),
+          "temp",
+          None,
+          UserStatus.Active
+        )
       }
-      ???
+
+      Either.fromOption(
+        result,
+        err(UserNotFound)
+      )
     }
   }
 }
