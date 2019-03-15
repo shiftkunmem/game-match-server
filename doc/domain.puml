@@ -1,0 +1,90 @@
+@startuml
+title ドメイン
+
+
+グループ参加希望 "1" -up- "0..*" ユーザー: ユーザーID
+グループ "1" <-right- "1" グループ参加希望: グループID
+グループ "1" <-- "0..*" メンバー: グループID
+グループ "1" <-- "0..*" 募集シフト: グループID
+メンバー "1" <-- "0..*" 希望シフト: メンバーID
+希望シフト "1" <-- "0..*" 募集シフト: 希望シフトID
+希望シフト "1" <-left- "0..*" カスタム希望: 希望シフトID
+時間枠 "1" <-- "0..*" 希望シフト: 希望シフトID
+時間枠 "1" <-down- "0..*" 募集シフト: 募集シフトID
+役割設定 "1" <-down- "0..1" 募集シフト: 時間枠ID
+
+
+
+
+class ユーザー {
+    ユーザーID: Long
+    名前: String
+}
+note left : :サービスに登録した人のこと()
+
+class グループ {
+    グループID: Long
+    グループ名: String
+    管理人: List[メンバーID]
+}
+note right : 店舗とかのこと
+
+class グループ参加希望{
+    グループ参加希望ID
+    ユーザー: List[ユーザーID]
+}
+
+class メンバー{
+    メンバーID: Long[Pri]
+    ユーザーID: Long
+    表示名: String
+    役割: Int
+    時給: Int
+}
+
+class 時間枠{
+    開始日時: LocalDate
+    終了日時: LocalDate
+}
+
+class 役割設定 <<ValueObject>>{
+    時間枠: 時間枠ID
+    レベル: Int
+    最小人数: Int
+    最大人数: Int
+}
+
+
+
+class 募集シフト{
+    シフトID: Long
+    グループID: Long
+    開始日: LocalDate
+    終了日: LocalDate
+    希望シフト一覧: List[希望シフト]
+}
+note right : 管理者が設定した募集するシフトの設定など
+
+class 希望シフト{
+    希望シフトID: Long
+    募集シフトID: Long
+    メンバーID: Long
+    日時希望: List[時間枠]
+    カスタム希望: List[カスタム希望]
+    週回数希望: Int
+    希望曜日: List[曜日]
+    非希望曜日: List[曜日]
+}
+note left : メンバーが提出するシフト
+
+class カスタム希望 <<ValueObject>>{
+    日時: LocalDate
+    可能開始時間: Date
+    可能終了時間: Date
+    最低限時間: Date
+    最大限時間: Date
+    希望度: Int
+}
+note right  : 決まった日程ではなく、週3希望などの要望を表したクラス
+
+@enduml
