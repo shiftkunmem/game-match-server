@@ -7,8 +7,9 @@ lazy val akkaVersion = "2.5.3"
 lazy val macwireVersion = "2.3.0"
 lazy val scalikeJdbcVersion = "3.0.1"
 
-lazy val root = (project in file("."))
 
+lazy val root = (project in file("."))
+  .enablePlugins(JavaAppPackaging)
   .settings(
     inThisBuild(List(
       organization := "shiftkun",
