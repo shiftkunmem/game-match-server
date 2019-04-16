@@ -9,7 +9,6 @@ lazy val scalikeJdbcVersion = "3.0.1"
 
 
 lazy val root = (project in file("."))
-  .enablePlugins(JavaAppPackaging)
   .settings(
     inThisBuild(List(
       organization := "shiftkun",

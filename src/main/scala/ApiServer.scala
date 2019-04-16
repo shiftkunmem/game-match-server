@@ -7,7 +7,7 @@ import ch.megard.akka.http.cors.scaladsl.CorsDirectives.cors
 import scalikejdbc.config.DBs
 import shiftkun.lib.auth.AuthContext
 import shiftkun.{ConcurrencyContexts, DomainServiceModule}
-import shiftkun.api.{SampleApi, SwaggerDocApi, UserApi}
+import shiftkun.api.{HealthCheckApi, SampleApi, SwaggerDocApi, UserApi}
 import shiftkun.api.common.{ErrorInfo, ErrorOutput}
 import shiftkun.application.AppServiceModule
 import shiftkun.infrastructure.InfrastructureModule
@@ -45,7 +45,8 @@ object ApiServer {
             val mainRoutes: AuthContext => Route = { implicit auth =>
                     new SampleApi(module).routes ~
                       new UserApi(module).routes ~
-                      cors() { SwaggerDocApi.routes }
+                      new HealthCheckApi().routes ~
+                      cors() {SwaggerDocApi.routes }
                 }
 
             import akka.http.scaladsl.server.Directives._
