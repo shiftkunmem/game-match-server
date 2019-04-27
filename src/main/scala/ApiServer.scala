@@ -5,6 +5,7 @@ import akka.http.scaladsl.server.Directives.host
 import akka.http.scaladsl.server.{ExceptionHandler, Route}
 import akka.stream.ActorMaterializer
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives.cors
+import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
 import scalikejdbc.config.DBs
 import shiftkun.lib.auth.AuthContext
 import shiftkun.{ConcurrencyContexts, DomainServiceModule}
@@ -93,16 +94,20 @@ class ApiServer extends LoggingSupport {
                     ))
             }
 
+            val corsSettings = CorsSettings.defaultSettings.copy(
+                allowedMethods = scala.collection.immutable.Seq(GET, POST, PUT, DELETE, HEAD, OPTIONS)
+            )
 
             handleExceptions(exceptionHandler) {
                 authenticateOAuth2Async[AuthContext](realm = "ASaaS", module.authenticator.authenticate) { implicit auth: AuthContext =>
-
-                    extractRequestContext { ctx =>
-                        logger.debug("request={},user={}",ctx.request,"2")
-                        mainRoutes(auth).andThen {
-                            _.map { result =>
-                                logger.debug("response={},user={}",result,"2")
-                                result
+                    cors(corsSettings) {
+                        extractRequestContext { ctx =>
+                            logger.debug("request={},user={}", ctx.request, "2")
+                            mainRoutes(auth).andThen {
+                                _.map { result =>
+                                    logger.debug("response={},user={}", result, "2")
+                                    result
+                                }
                             }
                         }
                     }
