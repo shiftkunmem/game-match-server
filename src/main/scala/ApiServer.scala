@@ -1,6 +1,7 @@
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.server.Directives.host
 import akka.http.scaladsl.server.{ExceptionHandler, Route}
 import akka.stream.ActorMaterializer
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives.cors
@@ -11,8 +12,11 @@ import shiftkun.api.{HealthCheckApi, SampleApi, SwaggerDocApi, UserApi}
 import shiftkun.api.common.{ErrorInfo, ErrorOutput}
 import shiftkun.application.AppServiceModule
 import shiftkun.infrastructure.InfrastructureModule
+import shiftkun.lib.LoggingSupport
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent._
+import scala.concurrent.duration._
+import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.io.StdIn
 
 object ApiServer {
@@ -20,6 +24,29 @@ object ApiServer {
 
         DBs.setupAll()
 
+        val server = new ApiServer()
+        Await.result(
+            server.start("0.0.0.0", 8080),
+            Duration.Inf
+        )
+
+        scala.sys.addShutdownHook {
+            Await.result(server.stop(), 30.seconds)
+            DBs.closeAll()
+        }
+
+    }
+}
+
+
+class ApiServer extends LoggingSupport {
+
+    import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
+    import akka.http.scaladsl.model.HttpMethods._
+
+    implicit val system = ActorSystem()
+
+    def start(host: String, port: Int): Future[_] = {
         implicit val system = ActorSystem("my-system")
         implicit val materializer = ActorMaterializer()
         implicit val executionContext = system.dispatcher
@@ -30,8 +57,11 @@ object ApiServer {
               with DomainServiceModule
               with ConcurrencyContexts {
                 override def app = system.dispatchers.lookup("app.non-blocking-dispatcher")
+
                 override def infrastructure: ExecutionContext = system.dispatchers.lookup("app.infrastructure-dispatcher")
+
                 override def domain = system.dispatchers.lookup("app.non-blocking-dispatcher")
+
                 override def infrastructureSystem: ActorSystem = system
             }
 
@@ -43,17 +73,20 @@ object ApiServer {
             import io.circe.generic.auto._
 
             val mainRoutes: AuthContext => Route = { implicit auth =>
-                    new SampleApi(module).routes ~
-                      new UserApi(module).routes ~
-                      new HealthCheckApi().routes ~
-                      cors() {SwaggerDocApi.routes }
-                }
+                new SampleApi(module).routes ~
+                  new UserApi(module).routes ~
+                  new HealthCheckApi().routes ~
+                  cors() {
+                      SwaggerDocApi.routes
+                  }
+            }
 
             import akka.http.scaladsl.server.Directives._
             import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport._
             import io.circe.generic.auto._
             val exceptionHandler = ExceptionHandler {
                 case e: Exception =>
+                    logger.error(s"Exception occurred in ${this.getClass.getSimpleName}", e)
                     complete((
                       StatusCodes.InternalServerError,
                       ErrorOutput(Seq(ErrorInfo("UnexpectedError", e.getMessage)))
@@ -63,18 +96,26 @@ object ApiServer {
 
             handleExceptions(exceptionHandler) {
                 authenticateOAuth2Async[AuthContext](realm = "ASaaS", module.authenticator.authenticate) { implicit auth: AuthContext =>
-                    mainRoutes(auth)
+
+                    extractRequestContext { ctx =>
+                        mainRoutes(auth).andThen {
+                            _.map { result =>
+                                logger.debug("request={},user={}",ctx.request,"2")
+                                result
+                            }
+                        }
+                    }
                 }
             }
         }
 
-        val bindingFuture = Http().bindAndHandle(routes, "0.0.0.0", 8080)
-
-        println(s"Server online at http://localhost:8080/\nPress RETURN to stop...")
-        println(s"うんこちんこブリブリ！　Enterを押すとウンチがプリプリするよ")
-        StdIn.readLine() // let it run until user presses return
-        bindingFuture
-            .flatMap(_.unbind()) // trigger unbinding from the port
-            .onComplete(_ => system.terminate()) // and shutdown when done
+        for {
+            sb <- Http().bindAndHandle(routes, host, port)
+        } yield {
+            logger.info("AccountingZ api server is running...")
+            sb
+        }
     }
+        def stop(): Future[_] =
+            system.terminate()
 }
