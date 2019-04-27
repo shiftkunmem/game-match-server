@@ -98,9 +98,10 @@ class ApiServer extends LoggingSupport {
                 authenticateOAuth2Async[AuthContext](realm = "ASaaS", module.authenticator.authenticate) { implicit auth: AuthContext =>
 
                     extractRequestContext { ctx =>
+                        logger.debug("request={},user={}",ctx.request,"2")
                         mainRoutes(auth).andThen {
                             _.map { result =>
-                                logger.debug("request={},user={}",ctx.request,"2")
+                                logger.debug("response={},user={}",result,"2")
                                 result
                             }
                         }
