@@ -15,13 +15,13 @@ class SampleApi(val module: AppServiceModule)
 
   def postSample: Route = {
     path("sample") {
-      get {
+      options {
         //complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, "<h1>Say hello to akka-http</h1>"))
 //        val result =
 //          for {
 //            temp <- sampleAppQuery.temp
 //          } yield temp
-        val r = "temp"
+        val r = "成功です！"
 //        response(result) { r =>
           complete(r)
 //        }
