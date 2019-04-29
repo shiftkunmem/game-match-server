@@ -3,7 +3,7 @@ package shiftkun.lib.auth.impl
 import java.nio.charset.StandardCharsets
 import java.util.Base64
 
-import akka.http.scaladsl.server.{Directive0, Directive1, ValidationRejection}
+import akka.http.scaladsl.server.{Directive0, ValidationRejection}
 import akka.http.scaladsl.server.Directives._
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec

@@ -3,7 +3,7 @@ lazy val monocleVersion = "1.5.0-cats"
 lazy val monixVersion = "3.0.0-RC1"
 lazy val circeVersion = "0.9.1"
 lazy val akkaHttpVersion = "10.0.10"
-lazy val akkaVersion = "2.5.3"
+lazy val akkaVersion = "2.5.19"
 lazy val macwireVersion = "2.3.0"
 lazy val scalikeJdbcVersion = "3.0.1"
 
