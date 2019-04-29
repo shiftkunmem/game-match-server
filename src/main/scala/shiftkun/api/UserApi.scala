@@ -17,7 +17,7 @@ import scala.concurrent.ExecutionContext
 class UserApi(val module: AppServiceModule)(implicit ec: ExecutionContext)
   extends ApiSupport
     with ApiErrorMapper {
-  def routes(implicit auth: AuthContext): Route = registerUser ~ getUser
+  def routes(implicit auth: AuthContext): Route = registerUser ~ getUser ~ sampleUser
 
   import module._
 
