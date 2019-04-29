@@ -10,7 +10,7 @@ import shiftkun.api.UserApi.{UserGetOutput, UserQueryResult}
 import shiftkun.domain.model.{LineUserId, User, UserId, UserStatus}
 import shiftkun.lib.ProcessResult
 import io.circe.generic.auto._
-import shiftkun.lib.auth.impl.LineAuthenticator
+import shiftkun.lib.auth.impl.{Events, LineAuthenticator, MessageEvent}
 
 import scala.concurrent.ExecutionContext
 
@@ -37,17 +37,17 @@ class UserApi(val module: AppServiceModule)(implicit ec: ExecutionContext)
 
   def sampleUser(implicit auth:AuthContext): Route = {
     path("line" / "callback") {
-      (post & LineAuthenticator.verifyLINESignature) {a =>
-//        val result =
-//          for {
-//            user <- userAppService.registerUser
-//          } yield user
-//        response(result) { r =>
-          complete(a)
-//        }
-      }
+      (post & LineAuthenticator.verifyLINESignature) {
+            entity(as[Events]) { request =>
+              request.events.foreach {
+                case e: MessageEvent => println(s"catch event: $e")
+                case _ => println("no match")
+              }
+              complete("OK")
+            }
+          }
+        }
     }
-  }
 
   def getUser(implicit auth: AuthContext): Route = {
     path("user") {

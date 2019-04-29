@@ -76,6 +76,9 @@ lazy val root = (project in file("."))
       // swagger
       "com.github.swagger-akka-http" %% "swagger-akka-http" % "0.14.1",
 
+      "com.typesafe.akka" %% "akka-http-spray-json" % "10.1.8",
+
+      "io.spray" %%  "spray-json" % "1.3.5",
 
       // json web token
       "com.pauldijou" %% "jwt-core" % "0.18.0",
