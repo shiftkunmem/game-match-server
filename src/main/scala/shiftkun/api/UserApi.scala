@@ -37,13 +37,13 @@ class UserApi(val module: AppServiceModule)(implicit ec: ExecutionContext)
 
   def sampleUser(implicit auth:AuthContext): Route = {
     path("line" / "callback") {
-      (post & LineAuthenticator.verifyLINESignature) {
+      (post & LineAuthenticator.verifyLINESignature) {a =>
 //        val result =
 //          for {
 //            user <- userAppService.registerUser
 //          } yield user
 //        response(result) { r =>
-          complete("OK")
+          complete(a)
 //        }
       }
     }
